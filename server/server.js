@@ -56,8 +56,10 @@ app.post('/reviews', (req, res) => {
     }
     res.send(dbResponse);
     client.end();
-  })
-})
+  });
+});
+
+
 
 app.put('/reviews/:review_id/helpful', (req, res) => {
   client.query('TODO;', (err, dbResponse) => {
@@ -68,18 +70,20 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
     res.send(dbResponse);
     client.end();
   });
-);
+});
 
 app.put('/reviews/:review_id/report', (req, res) => {
   client.query('TODO;', (err, dbResponse) => {
     if (err) {
       res.status(400);
-      res.send('Query to DB POST /reviews/:review_id/report failed');
+      res.send('Query to DB PUT /reviews/:review_id/report failed');
     }
     res.send(dbResponse);
     client.end();
   });
-);
+});
 
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+
+module.exports = app;
