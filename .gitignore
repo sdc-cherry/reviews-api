@@ -1,0 +1,4 @@
+/coverage
+server/node_modules
+/pgdata
+/photos.txt

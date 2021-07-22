@@ -1,0 +1,27 @@
+{
+  "name": "reviews-api",
+  "version": "1.0.0",
+  "description": "The api for the reviews enpoint in the hack reactor FEC project",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sdc-cherry/reviews-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sdc-cherry/reviews-api/issues"
+  },
+  "homepage": "https://github.com/sdc-cherry/reviews-api#readme",
+  "devDependencies": {
+    "jest": "^27.0.6"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "pg": "^8.6.0",
+    "postgres": "^1.0.2"
+  }
+}
