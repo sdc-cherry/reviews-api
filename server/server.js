@@ -32,6 +32,7 @@ app.get('/', (req, res) => {
   res.status(200).send("Server Up and Running!");
 });
 
+// TODO: This query returns two of the same data, and does not sort correctly
 app.get('/reviews', (req, res) => {
 
   console.log(req.query);
@@ -39,11 +40,19 @@ app.get('/reviews', (req, res) => {
   const queryParams = {
     page: req.query.page || 0,
     count: req.query.count || 5,
-    sort: req.query.sort,
+    sort: req.query.sort || "helpful",
     product_id: req.query.product_id || 1
   }
 
-  const query = `SELECT * FROM review WHERE product_id=${queryParams.product_id}`
+  let sortQuery = "ORDER BY helpfulness DESC"
+
+  if (queryParams.sort === "newest") {
+    sortQuery = "ORDER BY date DESC"
+  } else {
+    sortQuery = "ORDER BY rating DESC"
+  }
+
+  const query = `SELECT * FROM review WHERE product_id=${queryParams.product_id} ` + sortQuery;
 
   var resData = {
     product: queryParams.product_id,
@@ -52,11 +61,12 @@ app.get('/reviews', (req, res) => {
     results: []
   }
 
+
   pool.query(query, (err, dbResponse) => {
     if (err) {
       res.status(400).send('Query to DB GET /reviews failed: ' + err);
     } else {
-      resData.results = dbResponse.rows
+      resData.results = dbResponse.rows;
 
       var photos = resData.results.map(review => {
         const query = `SELECT * FROM review_photos WHERE review_id=${review.id}`
@@ -64,7 +74,7 @@ app.get('/reviews', (req, res) => {
         return new Promise((res, rej) => {
           pool.query(query, (err, photoRes) => {
             if (err) {console.log(err); rej(err)} else {
-              review.photos = photoRes.rows
+              review.photos = photoRes.rows;
               res(resData);
             }
           });
@@ -74,8 +84,8 @@ app.get('/reviews', (req, res) => {
       console.log(photos)
       Promise.all(photos)
         .then((data) => {
-          res.status(200).send(data);
-        })
+          res.status(200).send(data[0]);
+        });
 
     }
   });
