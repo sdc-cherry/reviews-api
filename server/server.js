@@ -1,3 +1,4 @@
+const e = require('express');
 const express = require('express');
 const app = express();
 const port = 4444;
@@ -61,7 +62,6 @@ app.get('/reviews', (req, res) => {
     results: []
   }
 
-
   pool.query(query, (err, dbResponse) => {
     if (err) {
       res.status(400).send('Query to DB GET /reviews failed: ' + err);
@@ -92,14 +92,71 @@ app.get('/reviews', (req, res) => {
 });
 
 app.get('/reviews/meta', (req, res) => {
-  client.query('TODO;', (err, dbResponse) => {
+
+  var queryParams = {
+    product_id: req.query.product_id
+  }
+
+  var query = `SELECT (rating, reccomended) FROM review WHERE product_id=${queryParams.product_id}`
+
+  var resData = {
+    product_id: req.query.product_id || 0,
+    rating: {},
+    reccommended: {"0": 0, "1": 0},
+    characteristics: {}
+  }
+
+  pool.query(query, (err, dbResponse) => {
     if (err) {
       res.status(400);
       res.send('Query to DB GET /reviews/meta failed');
     }
 
-    res.send(dbResponse);
-    client.end();
+    // TODO, this is hardcoded to anticipate a 1 character response in rating which may not be the case
+    let characteristics = dbResponse.rows.map(meta => {
+
+      if (resData.rating[meta.row[1]]) {
+        resData.rating[meta.row[1]] += 1;
+      } else {
+        resData.rating[meta.row[1]] = 1;
+      }
+
+      if (resData.rating[meta.row[4]] === "t") {
+        resData.reccommended["0"] += 1;
+      } else {
+        resData.reccommended["1"] += 1;
+      }
+
+      const query = `SELECT characteristic.id,value,name 
+                    FROM characteristic_review 
+                    INNER JOIN characteristic 
+                    ON (characteristic_review.id = characteristic.id) 
+                    WHERE characteristic_review.review_id=${queryParams.product_id};`
+
+      return new Promise((res, rej) => {
+        pool.query(query, (err, charRes) => {
+          if (err) {console.log(err); rej(err)} else {
+            console.log(charRes);
+
+            charRes.rows.map (row => {
+              resData.characteristics[row.name] = {
+                id: row.id,
+                value: row.value
+              };
+            })
+
+            res(resData);
+          }
+        });
+      });
+
+    });
+
+    Promise.all(characteristics)
+      .then((data) => {
+        res.status(200).send(data[0])
+      });
+
   });
 });
 
