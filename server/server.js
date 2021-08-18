@@ -174,37 +174,42 @@ app.post('/reviews', (req, res) => {
     characteristics: req.query.characteristics
   }
 
+  if (typeof qp.characteristics !== 'object') {
+    try {
+      qp.characteristics = JSON.parse(qp.characteristics);
+      console.log("String to Object:", qp.characteristics);
+    } catch (error) {
+      res.status(400).send("Failed to convert characetristics to object: " + error);
+    }
+  }
+  
+
   let query = `INSERT INTO review(product_id, rating, date, summary, reccomended, reported, reviewername, revieweremail) 
               VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`
 
   pool.query(query, [qp.product_id, qp.rating, Date.now(), qp.summary, qp.reccommended, false, qp.name, qp.email])
     .then((resp) => {
 
-      var photoPromises = qp.photos.map((photo) => {
+      
+      var promises = qp.photos.map((photo) => {
         var query = 'INSERT INTO review_photos(review_id, url) VALUES($1, $2)';
 
         return pool.query(query, [resp.rows[0].id, photo]);
       });
 
-      var characteristicPromises = Object.keys(qp.characteristics).map((key) => {
-        var query = 'INSERT INTO characteristic_review(characteristic_id, review_id, value) VALUES($1, $2, $3)';
+      
+      for (key in qp.characteristics) {
 
-        console.log(key, key.split(""));
+        var characteristicsQuery = 'INSERT INTO characteristic_review(characteristic_id, review_id, value) VALUES($1, $2, $3)';
+        
+        console.log("Key: ", key);
+        console.log("ReviewID: ", resp.rows[0].id);
+        console.log("Value:", qp.characteristics[key]);
+        let prom = pool.query(characteristicsQuery, [key, resp.rows[0].id, qp.characteristics[key]])
+        promises.push(prom);
+      }
 
-        var number = ''
-
-        key.split("").forEach((num) => {
-          if (/^\d+$/.test(num)) {
-            number = number + num;
-          }
-        });
-
-        console.log("Char Values:", Object.keys(qp.characteristics));
-
-        return pool.query(query, [number, resp.rows[0].id, qp.characteristics[key]]);
-      });
-
-      Promise.all(photoPromises.push(characteristicPromises))
+      Promise.all(promises)
         .then((data) => {
           res.status(200).send(data);
         });
