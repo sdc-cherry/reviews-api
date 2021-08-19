@@ -222,8 +222,6 @@ app.post('/reviews', (req, res) => {
 
 app.put('/reviews/:review_id/helpful', (req, res) => {
 
-  console.log(req);
-
   var qp = {
     review_id: req.params.review_id
   }
@@ -240,14 +238,20 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
 });
 
 app.put('/reviews/:review_id/report', (req, res) => {
-  client.query('TODO;', (err, dbResponse) => {
-    if (err) {
-      res.status(400);
-      res.send('Query to DB PUT /reviews/:review_id/report failed');
-    }
-    res.send(dbResponse);
-    client.end();
-  });
+
+  var qp = {
+    review_id: req.params.review_id
+  }
+
+  let query = 'UPDATE review SET reported=true WHERE id=' + qp.review_id;
+
+  pool.query(query)
+    .then((data) => {
+      res.status(204).send("Success: " + data);
+    })
+    .catch((err) => {
+      res.status(400).send("Error: " + err);
+    });
 });
 
 
