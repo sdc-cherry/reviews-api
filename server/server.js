@@ -167,7 +167,7 @@ app.post('/reviews', (req, res) => {
     product_id: req.query.product_id,
     rating: req.query.rating,
     summary: req.query.body,
-    reccommended: req.query.reccommended,
+    reccommended: req.query.reccommended || false,
     name: req.query.name,
     email: req.query.email,
     photos: req.query.photos,
@@ -201,7 +201,7 @@ app.post('/reviews', (req, res) => {
       for (key in qp.characteristics) {
 
         var characteristicsQuery = 'INSERT INTO characteristic_review(characteristic_id, review_id, value) VALUES($1, $2, $3)';
-        
+
         console.log("Key: ", key);
         console.log("ReviewID: ", resp.rows[0].id);
         console.log("Value:", qp.characteristics[key]);
@@ -221,14 +221,22 @@ app.post('/reviews', (req, res) => {
 });
 
 app.put('/reviews/:review_id/helpful', (req, res) => {
-  client.query('TODO;', (err, dbResponse) => {
-    if (err) {
-      res.status(400);
-      res.send('Query to DB PUT /reviews/:review_id/helpful failed');
-    }
-    res.send(dbResponse);
-    client.end();
-  });
+
+  console.log(req);
+
+  var qp = {
+    review_id: req.params.review_id
+  }
+
+  let query = 'UPDATE review SET reccomended=true WHERE id=' + qp.review_id;
+
+  pool.query(query)
+    .then((data) => {
+      res.status(204).send("Success: " + data);
+    })
+    .catch((err) => {
+      res.status(400).send("Error: " + err);
+    });
 });
 
 app.put('/reviews/:review_id/report', (req, res) => {
