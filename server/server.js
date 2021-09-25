@@ -8,7 +8,7 @@ const { Pool } = require('pg');
 const pool = new Pool({
   user: 'postgres',
   host: 'postgres',
-  database: 'postgres',
+  database: 'sdcdb',
   password: 'postgres',
   port: 5432,
 });
@@ -26,7 +26,6 @@ pool.connect((err, client, release) => {
     console.log(result.rows)
   })
 });
-
 
 app.get('/', (req, res) => {
   res.status(200).send("Server Up and Running!");
@@ -65,6 +64,8 @@ app.get('/reviews', (req, res) => {
     if (err) {
       res.status(400).send('Query to DB GET /reviews failed: ' + err);
     } else {
+
+      console.log(dbResponse);
       resData.results = dbResponse.rows;
 
       var photos = resData.results.map(review => {
@@ -72,7 +73,7 @@ app.get('/reviews', (req, res) => {
 
         return new Promise((res, rej) => {
           pool.query(query, (err, photoRes) => {
-            if (err) {console.log(err); rej(err)} else {
+            if (err) { console.log(err); rej(err) } else {
               review.photos = photoRes.rows;
               res(resData);
             }
@@ -100,7 +101,7 @@ app.get('/reviews/meta', (req, res) => {
   var resData = {
     product_id: req.query.product_id || 0,
     rating: {},
-    reccommended: {"0": 0, "1": 0},
+    reccommended: { "0": 0, "1": 0 },
     characteristics: {}
   }
 
@@ -133,10 +134,10 @@ app.get('/reviews/meta', (req, res) => {
 
       return new Promise((res, rej) => {
         pool.query(query, (err, charRes) => {
-          if (err) {console.log(err); rej(err)} else {
+          if (err) { console.log(err); rej(err) } else {
             console.log(charRes);
 
-            charRes.rows.map (row => {
+            charRes.rows.map(row => {
               resData.characteristics[row.name] = {
                 id: row.id,
                 value: row.value
@@ -182,7 +183,7 @@ app.post('/reviews', (req, res) => {
       res.status(400).send("Failed to convert characetristics to object: " + error);
     }
   }
-  
+
 
   let query = `INSERT INTO review(product_id, rating, date, summary, reccomended, reported, reviewername, revieweremail) 
               VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`
@@ -190,14 +191,14 @@ app.post('/reviews', (req, res) => {
   pool.query(query, [qp.product_id, qp.rating, Date.now(), qp.summary, qp.reccommended, false, qp.name, qp.email])
     .then((resp) => {
 
-      
+
       var promises = qp.photos.map((photo) => {
         var query = 'INSERT INTO review_photos(review_id, url) VALUES($1, $2)';
 
         return pool.query(query, [resp.rows[0].id, photo]);
       });
 
-      
+
       for (key in qp.characteristics) {
 
         var characteristicsQuery = 'INSERT INTO characteristic_review(characteristic_id, review_id, value) VALUES($1, $2, $3)';

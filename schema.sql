@@ -56,3 +56,11 @@ CREATE TABLE IF NOT EXISTS review_photos(
       REFERENCES review(ID),
   url TEXT
 );
+
+
+-- Copies in short data
+\copy product from 'tmp/SDCData/short/productshort.csv' WITH CSV HEADER
+\copy review from 'tmp/SDCData/short/reviewsshort.csv' WITH CSV HEADER
+\copy characteristic from 'tmp/SDCData/short/characteristicsshort.csv' WITH CSV HEADER
+\copy characteristic_review from 'tmp/SDCData/short/characteristic_reviewsshort.csv' WITH CSV HEADER
+\copy review_photos from 'tmp/SDCData/short/review_photosshort.csv' WITH CSV HEADER

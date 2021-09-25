@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "k6": "^0.0.0",
     "pg": "^8.6.0",
     "postgres": "^1.0.2",
     "postgres-pool": "^5.0.4",
